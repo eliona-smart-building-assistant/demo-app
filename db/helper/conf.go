@@ -92,7 +92,7 @@ func DeleteConfig(ctx context.Context, configID int64) error {
 }
 
 func toDbConfig(ctx context.Context, appConfig appmodel.Configuration) (dbConfig dbgen.Configuration, err error) {
-	dbConfig.APIAccessChangeMe = appConfig.ApiAccessChangeMe
+	dbConfig.APIKey = appConfig.ApiKey
 
 	dbConfig.ID = appConfig.Id
 	dbConfig.RefreshInterval = appConfig.RefreshInterval
@@ -115,7 +115,7 @@ func toDbConfig(ctx context.Context, appConfig appmodel.Configuration) (dbConfig
 }
 
 func toAppConfig(dbConfig *dbgen.Configuration) (appConfig appmodel.Configuration, err error) {
-	appConfig.ApiAccessChangeMe = dbConfig.APIAccessChangeMe
+	appConfig.ApiKey = dbConfig.APIKey
 
 	appConfig.Id = dbConfig.ID
 	appConfig.Enable = dbConfig.Enable

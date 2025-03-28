@@ -16,11 +16,11 @@
 package apiservices
 
 import (
+	"context"
 	apiserver "demo-app/api/generated"
 	appmodel "demo-app/app/model"
 	"demo-app/broker"
 	dbhelper "demo-app/db/helper"
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -98,15 +98,15 @@ func (s *ConfigurationAPIService) DeleteConfigurationById(ctx context.Context, c
 
 func toAPIConfig(appConfig appmodel.Configuration) apiserver.Configuration {
 	return apiserver.Configuration{
-		Id:                &appConfig.Id,
-		ApiAccessChangeMe: appConfig.ApiAccessChangeMe,
-		Enable:            &appConfig.Enable,
-		RefreshInterval:   appConfig.RefreshInterval,
-		RequestTimeout:    &appConfig.RequestTimeout,
-		AssetFilter:       toAPIAssetFilter(appConfig.AssetFilter),
-		Active:            &appConfig.Active,
-		ProjectIDs:        &appConfig.ProjectIDs,
-		UserId:            &appConfig.UserId,
+		Id:              &appConfig.Id,
+		ApiKey:          appConfig.ApiKey,
+		Enable:          &appConfig.Enable,
+		RefreshInterval: appConfig.RefreshInterval,
+		RequestTimeout:  &appConfig.RequestTimeout,
+		AssetFilter:     toAPIAssetFilter(appConfig.AssetFilter),
+		Active:          &appConfig.Active,
+		ProjectIDs:      &appConfig.ProjectIDs,
+		UserId:          &appConfig.UserId,
 	}
 }
 
@@ -125,7 +125,7 @@ func toAPIAssetFilter(appAF [][]appmodel.FilterRule) (result [][]apiserver.Filte
 }
 
 func toAppConfig(apiConfig apiserver.Configuration) (appConfig appmodel.Configuration) {
-	appConfig.ApiAccessChangeMe = apiConfig.ApiAccessChangeMe
+	appConfig.ApiKey = apiConfig.ApiKey
 
 	if apiConfig.Id != nil {
 		appConfig.Id = *apiConfig.Id

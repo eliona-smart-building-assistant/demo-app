@@ -225,11 +225,11 @@ components:
           description: Internal identifier for the configured API (created automatically).
           readOnly: true
           nullable: true
-        apiAccessChangeMe:
+        apiKey:
           type: string
           format: string
           description: There should be things like API address, access keys and so on.
-          example: 10.10.10.101
+          example: 12345
         enable:
           type: boolean
           description: Flag to enable or disable fetching from this API

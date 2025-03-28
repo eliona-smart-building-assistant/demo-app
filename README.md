@@ -1,19 +1,10 @@
-<mark>
-Replace the following strings globally with the real app name:
-</mark>
+# Demo Eliona app
 
-- `demo-app` with app's repo name. Use `-` if the app name contains spaces or other separators (such as dots). All letters are lower-cased. For names containing dots, adapt the documentation links.
-- `demo_app` and `app\\_schema\\_name` with app's db schema name. Use `_` if the app name contains spaces. All letters are lower-cased.
-- `Demo` with app's real name. Letters can be mixed-cased, depends on using e.g. brand names.
-
-# Eliona App for Demo
-
-The Demo app is used to access Demo.
+The Demo app is used to train Eliona engineers. It showcases app installation and configuration process, continuous asset creation and dashboard creation.
 
 ## Configuration
 
 The app needs environment variables and database tables for configuration. To edit the database tables the app provides an own API access.
-
 
 ### Registration in Eliona ###
 

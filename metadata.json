@@ -6,8 +6,8 @@
     "de": "Demo"
   },
   "description": {
-    "en": "The Demo app serves as a practice ",
-    "de": "Die Demo App ermöglicht den Zugriff auf Demo."
+    "en": "The Demo app serves as a practice app to train Eliona engineers.",
+    "de": "Die Demo-App dient als Übungs-App zum Trainieren von Eliona-Ingenieuren."
   },
   "dashboardTemplateNames": [
     "Demo"

@@ -17,7 +17,7 @@ type Configuration struct {
 	Id *int64 `json:"id,omitempty"`
 
 	// There should be things like API address, access keys and so on.
-	ApiAccessChangeMe string `json:"apiAccessChangeMe,omitempty"`
+	ApiKey string `json:"apiKey,omitempty"`
 
 	// Flag to enable or disable fetching from this API
 	Enable *bool `json:"enable,omitempty"`

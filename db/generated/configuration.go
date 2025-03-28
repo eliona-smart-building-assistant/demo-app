@@ -24,62 +24,62 @@ import (
 
 // Configuration is an object representing the database table.
 type Configuration struct {
-	ID                int64             `boil:"id" json:"id" toml:"id" yaml:"id"`
-	APIAccessChangeMe string            `boil:"api_access_change_me" json:"api_access_change_me" toml:"api_access_change_me" yaml:"api_access_change_me"`
-	RefreshInterval   int32             `boil:"refresh_interval" json:"refresh_interval" toml:"refresh_interval" yaml:"refresh_interval"`
-	RequestTimeout    int32             `boil:"request_timeout" json:"request_timeout" toml:"request_timeout" yaml:"request_timeout"`
-	AssetFilter       types.JSON        `boil:"asset_filter" json:"asset_filter" toml:"asset_filter" yaml:"asset_filter"`
-	Active            bool              `boil:"active" json:"active" toml:"active" yaml:"active"`
-	Enable            bool              `boil:"enable" json:"enable" toml:"enable" yaml:"enable"`
-	ProjectIds        types.StringArray `boil:"project_ids" json:"project_ids" toml:"project_ids" yaml:"project_ids"`
-	UserID            string            `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
+	ID              int64             `boil:"id" json:"id" toml:"id" yaml:"id"`
+	APIKey          string            `boil:"api_key" json:"api_key" toml:"api_key" yaml:"api_key"`
+	RefreshInterval int32             `boil:"refresh_interval" json:"refresh_interval" toml:"refresh_interval" yaml:"refresh_interval"`
+	RequestTimeout  int32             `boil:"request_timeout" json:"request_timeout" toml:"request_timeout" yaml:"request_timeout"`
+	AssetFilter     types.JSON        `boil:"asset_filter" json:"asset_filter" toml:"asset_filter" yaml:"asset_filter"`
+	Active          bool              `boil:"active" json:"active" toml:"active" yaml:"active"`
+	Enable          bool              `boil:"enable" json:"enable" toml:"enable" yaml:"enable"`
+	ProjectIds      types.StringArray `boil:"project_ids" json:"project_ids" toml:"project_ids" yaml:"project_ids"`
+	UserID          string            `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
 
 	R *configurationR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L configurationL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var ConfigurationColumns = struct {
-	ID                string
-	APIAccessChangeMe string
-	RefreshInterval   string
-	RequestTimeout    string
-	AssetFilter       string
-	Active            string
-	Enable            string
-	ProjectIds        string
-	UserID            string
+	ID              string
+	APIKey          string
+	RefreshInterval string
+	RequestTimeout  string
+	AssetFilter     string
+	Active          string
+	Enable          string
+	ProjectIds      string
+	UserID          string
 }{
-	ID:                "id",
-	APIAccessChangeMe: "api_access_change_me",
-	RefreshInterval:   "refresh_interval",
-	RequestTimeout:    "request_timeout",
-	AssetFilter:       "asset_filter",
-	Active:            "active",
-	Enable:            "enable",
-	ProjectIds:        "project_ids",
-	UserID:            "user_id",
+	ID:              "id",
+	APIKey:          "api_key",
+	RefreshInterval: "refresh_interval",
+	RequestTimeout:  "request_timeout",
+	AssetFilter:     "asset_filter",
+	Active:          "active",
+	Enable:          "enable",
+	ProjectIds:      "project_ids",
+	UserID:          "user_id",
 }
 
 var ConfigurationTableColumns = struct {
-	ID                string
-	APIAccessChangeMe string
-	RefreshInterval   string
-	RequestTimeout    string
-	AssetFilter       string
-	Active            string
-	Enable            string
-	ProjectIds        string
-	UserID            string
+	ID              string
+	APIKey          string
+	RefreshInterval string
+	RequestTimeout  string
+	AssetFilter     string
+	Active          string
+	Enable          string
+	ProjectIds      string
+	UserID          string
 }{
-	ID:                "configuration.id",
-	APIAccessChangeMe: "configuration.api_access_change_me",
-	RefreshInterval:   "configuration.refresh_interval",
-	RequestTimeout:    "configuration.request_timeout",
-	AssetFilter:       "configuration.asset_filter",
-	Active:            "configuration.active",
-	Enable:            "configuration.enable",
-	ProjectIds:        "configuration.project_ids",
-	UserID:            "configuration.user_id",
+	ID:              "configuration.id",
+	APIKey:          "configuration.api_key",
+	RefreshInterval: "configuration.refresh_interval",
+	RequestTimeout:  "configuration.request_timeout",
+	AssetFilter:     "configuration.asset_filter",
+	Active:          "configuration.active",
+	Enable:          "configuration.enable",
+	ProjectIds:      "configuration.project_ids",
+	UserID:          "configuration.user_id",
 }
 
 // Generated where
@@ -150,25 +150,25 @@ func (w whereHelpertypes_StringArray) GTE(x types.StringArray) qm.QueryMod {
 }
 
 var ConfigurationWhere = struct {
-	ID                whereHelperint64
-	APIAccessChangeMe whereHelperstring
-	RefreshInterval   whereHelperint32
-	RequestTimeout    whereHelperint32
-	AssetFilter       whereHelpertypes_JSON
-	Active            whereHelperbool
-	Enable            whereHelperbool
-	ProjectIds        whereHelpertypes_StringArray
-	UserID            whereHelperstring
+	ID              whereHelperint64
+	APIKey          whereHelperstring
+	RefreshInterval whereHelperint32
+	RequestTimeout  whereHelperint32
+	AssetFilter     whereHelpertypes_JSON
+	Active          whereHelperbool
+	Enable          whereHelperbool
+	ProjectIds      whereHelpertypes_StringArray
+	UserID          whereHelperstring
 }{
-	ID:                whereHelperint64{field: "\"demo_app\".\"configuration\".\"id\""},
-	APIAccessChangeMe: whereHelperstring{field: "\"demo_app\".\"configuration\".\"api_access_change_me\""},
-	RefreshInterval:   whereHelperint32{field: "\"demo_app\".\"configuration\".\"refresh_interval\""},
-	RequestTimeout:    whereHelperint32{field: "\"demo_app\".\"configuration\".\"request_timeout\""},
-	AssetFilter:       whereHelpertypes_JSON{field: "\"demo_app\".\"configuration\".\"asset_filter\""},
-	Active:            whereHelperbool{field: "\"demo_app\".\"configuration\".\"active\""},
-	Enable:            whereHelperbool{field: "\"demo_app\".\"configuration\".\"enable\""},
-	ProjectIds:        whereHelpertypes_StringArray{field: "\"demo_app\".\"configuration\".\"project_ids\""},
-	UserID:            whereHelperstring{field: "\"demo_app\".\"configuration\".\"user_id\""},
+	ID:              whereHelperint64{field: "\"demo_app\".\"configuration\".\"id\""},
+	APIKey:          whereHelperstring{field: "\"demo_app\".\"configuration\".\"api_key\""},
+	RefreshInterval: whereHelperint32{field: "\"demo_app\".\"configuration\".\"refresh_interval\""},
+	RequestTimeout:  whereHelperint32{field: "\"demo_app\".\"configuration\".\"request_timeout\""},
+	AssetFilter:     whereHelpertypes_JSON{field: "\"demo_app\".\"configuration\".\"asset_filter\""},
+	Active:          whereHelperbool{field: "\"demo_app\".\"configuration\".\"active\""},
+	Enable:          whereHelperbool{field: "\"demo_app\".\"configuration\".\"enable\""},
+	ProjectIds:      whereHelpertypes_StringArray{field: "\"demo_app\".\"configuration\".\"project_ids\""},
+	UserID:          whereHelperstring{field: "\"demo_app\".\"configuration\".\"user_id\""},
 }
 
 // ConfigurationRels is where relationship names are stored.
@@ -199,8 +199,8 @@ func (r *configurationR) GetAssets() AssetSlice {
 type configurationL struct{}
 
 var (
-	configurationAllColumns            = []string{"id", "api_access_change_me", "refresh_interval", "request_timeout", "asset_filter", "active", "enable", "project_ids", "user_id"}
-	configurationColumnsWithoutDefault = []string{"api_access_change_me", "asset_filter", "project_ids", "user_id"}
+	configurationAllColumns            = []string{"id", "api_key", "refresh_interval", "request_timeout", "asset_filter", "active", "enable", "project_ids", "user_id"}
+	configurationColumnsWithoutDefault = []string{"api_key", "asset_filter", "project_ids", "user_id"}
 	configurationColumnsWithDefault    = []string{"id", "refresh_interval", "request_timeout", "active", "enable"}
 	configurationPrimaryKeyColumns     = []string{"id"}
 	configurationGeneratedColumns      = []string{}
