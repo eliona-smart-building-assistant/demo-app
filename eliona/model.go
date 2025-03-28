@@ -16,8 +16,8 @@
 package eliona
 
 import (
-	appmodel "app-name/app/model"
-	conf "app-name/db/helper"
+	appmodel "demo-app/app/model"
+	conf "demo-app/db/helper"
 	"context"
 	"fmt"
 
@@ -95,7 +95,7 @@ func (r *Root) GetName() string {
 }
 
 func (r *Root) GetDescription() string {
-	return "Root asset for App Name devices"
+	return "Root asset for Demo devices"
 }
 
 func (r *Root) GetAssetType() string {

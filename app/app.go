@@ -16,11 +16,11 @@
 package app
 
 import (
-	apiserver "app-name/api/generated"
-	apiservices "app-name/api/services"
-	appmodel "app-name/app/model"
-	dbhelper "app-name/db/helper"
-	"app-name/eliona"
+	apiserver "demo-app/api/generated"
+	apiservices "demo-app/api/services"
+	appmodel "demo-app/app/model"
+	dbhelper "demo-app/db/helper"
+	"demo-app/eliona"
 	"context"
 	"net/http"
 	"sync"

@@ -16,10 +16,10 @@
 package apiservices
 
 import (
-	apiserver "app-name/api/generated"
-	appmodel "app-name/app/model"
-	"app-name/broker"
-	dbhelper "app-name/db/helper"
+	apiserver "demo-app/api/generated"
+	appmodel "demo-app/app/model"
+	"demo-app/broker"
+	dbhelper "demo-app/db/helper"
 	"context"
 	"errors"
 	"fmt"

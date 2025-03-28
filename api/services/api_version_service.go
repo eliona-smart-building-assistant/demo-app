@@ -16,7 +16,7 @@
 package apiservices
 
 import (
-	apiserver "app-name/api/generated"
+	apiserver "demo-app/api/generated"
 	"context"
 	"encoding/json"
 	"fmt"

@@ -16,8 +16,8 @@
 package dbhelper
 
 import (
-	appmodel "app-name/app/model"
-	dbgen "app-name/db/generated"
+	appmodel "demo-app/app/model"
+	dbgen "demo-app/db/generated"
 	"context"
 	"database/sql"
 	"encoding/json"

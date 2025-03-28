@@ -20,17 +20,17 @@
 SET SCHEMA 'public';
 
 DELETE FROM versioning.patches
-WHERE app_name = 'app-name';
+WHERE app_name = 'demo-app';
 
 INSERT INTO public.eliona_store (app_name, category, version)
-VALUES ('app-name', 'app', 'v0.0.0')
+VALUES ('demo-app', 'app', 'v0.0.0')
 ON CONFLICT (app_name) DO UPDATE SET version = 'v0.0.0';
 
 INSERT INTO public.eliona_app (app_name, enable)
-VALUES ('app-name', 't')
+VALUES ('demo-app', 't')
 ON CONFLICT (app_name) DO UPDATE SET initialized_at = null;
 
-DROP SCHEMA IF EXISTS app_schema_name CASCADE;
+DROP SCHEMA IF EXISTS demo_app CASCADE;
 
 DELETE FROM heap
 WHERE asset_id IN (
@@ -53,18 +53,18 @@ WHERE widget_id IN (
 	SELECT public.widget.id
 	FROM public.widget
 		JOIN public.dashboard USING (dashboard_id)
-	WHERE public.dashboard.name LIKE 'App Name%'
+	WHERE public.dashboard.name LIKE 'Demo%'
 );
 
 DELETE FROM public.widget
 WHERE dashboard_id IN (
 	SELECT dashboard_id
 	FROM public.dashboard
-	WHERE name LIKE 'App Name%'
+	WHERE name LIKE 'Demo%'
 );
 
 DELETE FROM public.dashboard
-WHERE name LIKE 'App Name%';
+WHERE name LIKE 'Demo%';
 
--- DELETE FROM eliona_app WHERE app_name = 'app-name';
--- DELETE FROM eliona_store WHERE app_name = 'app-name';
+-- DELETE FROM eliona_app WHERE app_name = 'demo-app';
+-- DELETE FROM eliona_store WHERE app_name = 'demo-app';

@@ -184,13 +184,13 @@ var AssetWhere = struct {
 	IsRoot          whereHelperbool
 	AssetID         whereHelpernull_Int32
 }{
-	ID:              whereHelperint64{field: "\"app_schema_name\".\"asset\".\"id\""},
-	ConfigurationID: whereHelperint64{field: "\"app_schema_name\".\"asset\".\"configuration_id\""},
-	ProjectID:       whereHelperstring{field: "\"app_schema_name\".\"asset\".\"project_id\""},
-	GlobalAssetID:   whereHelperstring{field: "\"app_schema_name\".\"asset\".\"global_asset_id\""},
-	ProviderID:      whereHelperstring{field: "\"app_schema_name\".\"asset\".\"provider_id\""},
-	IsRoot:          whereHelperbool{field: "\"app_schema_name\".\"asset\".\"is_root\""},
-	AssetID:         whereHelpernull_Int32{field: "\"app_schema_name\".\"asset\".\"asset_id\""},
+	ID:              whereHelperint64{field: "\"demo_app\".\"asset\".\"id\""},
+	ConfigurationID: whereHelperint64{field: "\"demo_app\".\"asset\".\"configuration_id\""},
+	ProjectID:       whereHelperstring{field: "\"demo_app\".\"asset\".\"project_id\""},
+	GlobalAssetID:   whereHelperstring{field: "\"demo_app\".\"asset\".\"global_asset_id\""},
+	ProviderID:      whereHelperstring{field: "\"demo_app\".\"asset\".\"provider_id\""},
+	IsRoot:          whereHelperbool{field: "\"demo_app\".\"asset\".\"is_root\""},
+	AssetID:         whereHelpernull_Int32{field: "\"demo_app\".\"asset\".\"asset_id\""},
 }
 
 // AssetRels is where relationship names are stored.
@@ -622,8 +622,8 @@ func (assetL) LoadConfiguration(ctx context.Context, e boil.ContextExecutor, sin
 	}
 
 	query := NewQuery(
-		qm.From(`app_schema_name.configuration`),
-		qm.WhereIn(`app_schema_name.configuration.id in ?`, argsSlice...),
+		qm.From(`demo_app.configuration`),
+		qm.WhereIn(`demo_app.configuration.id in ?`, argsSlice...),
 	)
 	if mods != nil {
 		mods.Apply(query)
@@ -704,7 +704,7 @@ func (o *Asset) SetConfiguration(ctx context.Context, exec boil.ContextExecutor,
 	}
 
 	updateQuery := fmt.Sprintf(
-		"UPDATE \"app_schema_name\".\"asset\" SET %s WHERE %s",
+		"UPDATE \"demo_app\".\"asset\" SET %s WHERE %s",
 		strmangle.SetParamNames("\"", "\"", 1, []string{"configuration_id"}),
 		strmangle.WhereClause("\"", "\"", 2, assetPrimaryKeyColumns),
 	)
@@ -741,10 +741,10 @@ func (o *Asset) SetConfiguration(ctx context.Context, exec boil.ContextExecutor,
 
 // Assets retrieves all the records using an executor.
 func Assets(mods ...qm.QueryMod) assetQuery {
-	mods = append(mods, qm.From("\"app_schema_name\".\"asset\""))
+	mods = append(mods, qm.From("\"demo_app\".\"asset\""))
 	q := NewQuery(mods...)
 	if len(queries.GetSelect(q)) == 0 {
-		queries.SetSelect(q, []string{"\"app_schema_name\".\"asset\".*"})
+		queries.SetSelect(q, []string{"\"demo_app\".\"asset\".*"})
 	}
 
 	return assetQuery{q}
@@ -765,7 +765,7 @@ func FindAsset(ctx context.Context, exec boil.ContextExecutor, iD int64, selectC
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"app_schema_name\".\"asset\" where \"id\"=$1", sel,
+		"select %s from \"demo_app\".\"asset\" where \"id\"=$1", sel,
 	)
 
 	q := queries.Raw(query, iD)
@@ -827,9 +827,9 @@ func (o *Asset) Insert(ctx context.Context, exec boil.ContextExecutor, columns b
 			return err
 		}
 		if len(wl) != 0 {
-			cache.query = fmt.Sprintf("INSERT INTO \"app_schema_name\".\"asset\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
+			cache.query = fmt.Sprintf("INSERT INTO \"demo_app\".\"asset\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
 		} else {
-			cache.query = "INSERT INTO \"app_schema_name\".\"asset\" %sDEFAULT VALUES%s"
+			cache.query = "INSERT INTO \"demo_app\".\"asset\" %sDEFAULT VALUES%s"
 		}
 
 		var queryOutput, queryReturning string
@@ -901,7 +901,7 @@ func (o *Asset) Update(ctx context.Context, exec boil.ContextExecutor, columns b
 			return 0, errors.New("dbgen: unable to update asset, could not build whitelist")
 		}
 
-		cache.query = fmt.Sprintf("UPDATE \"app_schema_name\".\"asset\" SET %s WHERE %s",
+		cache.query = fmt.Sprintf("UPDATE \"demo_app\".\"asset\" SET %s WHERE %s",
 			strmangle.SetParamNames("\"", "\"", 1, wl),
 			strmangle.WhereClause("\"", "\"", len(wl)+1, assetPrimaryKeyColumns),
 		)
@@ -992,7 +992,7 @@ func (o AssetSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, co
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := fmt.Sprintf("UPDATE \"app_schema_name\".\"asset\" SET %s WHERE %s",
+	sql := fmt.Sprintf("UPDATE \"demo_app\".\"asset\" SET %s WHERE %s",
 		strmangle.SetParamNames("\"", "\"", 1, colNames),
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), len(colNames)+1, assetPrimaryKeyColumns, len(o)))
 
@@ -1093,7 +1093,7 @@ func (o *Asset) Upsert(ctx context.Context, exec boil.ContextExecutor, updateOnC
 			conflict = make([]string, len(assetPrimaryKeyColumns))
 			copy(conflict, assetPrimaryKeyColumns)
 		}
-		cache.query = buildUpsertQueryPostgres(dialect, "\"app_schema_name\".\"asset\"", updateOnConflict, ret, update, conflict, insert, opts...)
+		cache.query = buildUpsertQueryPostgres(dialect, "\"demo_app\".\"asset\"", updateOnConflict, ret, update, conflict, insert, opts...)
 
 		cache.valueMapping, err = queries.BindMapping(assetType, assetMapping, insert)
 		if err != nil {
@@ -1158,7 +1158,7 @@ func (o *Asset) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, e
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), assetPrimaryKeyMapping)
-	sql := "DELETE FROM \"app_schema_name\".\"asset\" WHERE \"id\"=$1"
+	sql := "DELETE FROM \"demo_app\".\"asset\" WHERE \"id\"=$1"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1232,7 +1232,7 @@ func (o AssetSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (i
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := "DELETE FROM \"app_schema_name\".\"asset\" WHERE " +
+	sql := "DELETE FROM \"demo_app\".\"asset\" WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, assetPrimaryKeyColumns, len(o))
 
 	if boil.IsDebug(ctx) {
@@ -1306,7 +1306,7 @@ func (o *AssetSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor) e
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := "SELECT \"app_schema_name\".\"asset\".* FROM \"app_schema_name\".\"asset\" WHERE " +
+	sql := "SELECT \"demo_app\".\"asset\".* FROM \"demo_app\".\"asset\" WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, assetPrimaryKeyColumns, len(*o))
 
 	q := queries.Raw(sql, args...)
@@ -1329,7 +1329,7 @@ func AssetExistsG(ctx context.Context, iD int64) (bool, error) {
 // AssetExists checks if the Asset row exists.
 func AssetExists(ctx context.Context, exec boil.ContextExecutor, iD int64) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"app_schema_name\".\"asset\" where \"id\"=$1 limit 1)"
+	sql := "select exists(select 1 from \"demo_app\".\"asset\" where \"id\"=$1 limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)

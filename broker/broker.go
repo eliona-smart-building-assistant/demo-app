@@ -16,8 +16,8 @@
 package broker
 
 import (
-	appmodel "app-name/app/model"
-	"app-name/eliona"
+	appmodel "demo-app/app/model"
+	"demo-app/eliona"
 )
 
 func TestAuthentication(config appmodel.Configuration) error {
