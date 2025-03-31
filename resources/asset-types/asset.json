@@ -1,0 +1,26 @@
+{
+	"attributes": [
+		{
+			"name": "value",
+			"enable": true,
+			"subtype": "input",
+			"translation": {
+				"de": "Value",
+				"en": "Status"
+			},
+			"isDigital": false,
+			"min": 0,
+			"max": 100
+		}
+	],
+	"custom": false,
+	"icon": null,
+	"name": "demo_asset",
+	"translation": {
+		"de": "Demo Asset",
+		"en": "Demo Asset"
+	},
+	"allowedInactivity": "00:05:00",
+	"urldoc": "https://doc.eliona.io/collection/eliona-english/eliona-apps/apps/demo-app",
+	"vendor": "Demo"
+}
