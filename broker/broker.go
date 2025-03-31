@@ -42,7 +42,7 @@ func GetDevices(config appmodel.Configuration) ([]asset.AssetWithParentReference
 	assets = append(assets, &root)
 	device := eliona.ExampleDevice{
 		Name:                fmt.Sprintf("Device from config %v", config.Id),
-		ID:                  string(config.Id),
+		ID:                  fmt.Sprintf("%v", config.Id),
 		LocationalParentGAI: root.GetGAI(),
 		FunctionalParentGAI: root.GetGAI(),
 		Config:              &config,

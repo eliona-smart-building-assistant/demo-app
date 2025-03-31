@@ -57,7 +57,7 @@ func (d *ExampleDevice) GetDescription() string {
 }
 
 func (d *ExampleDevice) GetAssetType() string {
-	return "demo_device"
+	return "demo_asset"
 }
 
 func (d *ExampleDevice) GetGAI() string {

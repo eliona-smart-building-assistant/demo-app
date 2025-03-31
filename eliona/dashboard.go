@@ -31,7 +31,7 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 
 	devices, _, err := client.NewClient().AssetsAPI.
 		GetAssets(client.AuthenticationContext()).
-		AssetTypeName("demo_").
+		AssetTypeName("demo_asset").
 		ProjectId(projectId).
 		Execute()
 	if err != nil {
@@ -40,6 +40,7 @@ func GetDashboard(projectId string) (api.Dashboard, error) {
 
 	widgetSequence := int32(0)
 	for _, device := range devices {
+		fmt.Println(device)
 		var widgetData []api.WidgetData
 		widgetData = append(widgetData, api.WidgetData{
 			ElementSequence: nullableInt32(1),

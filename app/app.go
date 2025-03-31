@@ -23,6 +23,8 @@ import (
 	"demo-app/broker"
 	dbhelper "demo-app/db/helper"
 	"demo-app/eliona"
+	"math"
+	"math/rand/v2"
 	"net/http"
 	"sync"
 	"time"
@@ -67,6 +69,7 @@ func Initialize() {
 }
 
 var once sync.Once
+var startTime time.Time
 
 func CollectData() {
 	configs, err := dbhelper.GetConfigs(context.Background())
@@ -80,6 +83,9 @@ func CollectData() {
 			log.Info("dbhelper", "No configs in DB. Please configure the app in Eliona.")
 		})
 		return
+	}
+	if startTime.IsZero() {
+		startTime = time.Now()
 	}
 
 	for _, config := range configs {
@@ -106,7 +112,7 @@ func CollectData() {
 
 		common.RunOnceWithParam(func(config appmodel.Configuration) {
 			log.Info("main", "Collecting %d started.", config.Id)
-			if err := collectResources(&config); err != nil {
+			if err := collectResources(config); err != nil {
 				changeAppStatus(statusError)
 				return // Error is handled in the method itself.
 			}
@@ -118,13 +124,13 @@ func CollectData() {
 	}
 }
 
-func collectResources(config *appmodel.Configuration) error {
-	devices, err := broker.GetDevices(*config)
+func collectResources(config appmodel.Configuration) error {
+	devices, err := broker.GetDevices(config)
 	if err != nil {
 		log.Error("broker", "getting devices: %v", err)
 		return err
 	}
-	if err := eliona.CreateAssets(*config, devices); err != nil {
+	if err := eliona.CreateAssets(config, devices); err != nil {
 		log.Error("eliona", "creating assets: %v", err)
 		return err
 	}
@@ -132,34 +138,33 @@ func collectResources(config *appmodel.Configuration) error {
 	return nil
 }
 
-// ListenForOutputChanges listens to output attribute changes from Eliona. Delete if not needed.
-func ListenForOutputChanges() {
-	for { // We want to restart listening in case something breaks.
-		outputs, err := eliona.ListenForOutputChanges()
-		if err != nil {
-			log.Error("eliona", "listening for output changes: %v", err)
-			changeAppStatus(statusError)
+func GenerateData() {
+	assets, err := dbhelper.GetAllDevices()
+	if err != nil {
+		log.Error("dbhelper", "getting assets: %v", err)
+		return
+	}
+	for _, asset := range assets {
+		value := generateSinWaveData()
+		data := map[string]any{
+			"value": value,
+		}
+		if err := eliona.UpsertData(asset.AssetID, data, time.Now(), api.SUBTYPE_INPUT); err != nil {
+			log.Error("eliona", "upserting data. %v", err)
 			return
 		}
-		for output := range outputs {
-			if cr := output.ClientReference.Get(); cr != nil && *cr == eliona.ClientReference {
-				// Just an echoed value this app sent.
-				continue
-			}
-			asset, err := dbhelper.GetAssetById(output.AssetId)
-			if err != nil {
-				log.Error("dbhelper", "getting asset by assetID %v: %v", output.AssetId, err)
-				changeAppStatus(statusError)
-				return
-			}
-			if err := outputData(asset, output.Data); err != nil {
-				log.Error("dbhelper", "outputting data (%v) for config %v and assetId %v: %v", output.Data, asset.Config.Id, asset.AssetID, err)
-				changeAppStatus(statusError)
-				return
-			}
-		}
-		time.Sleep(time.Second * 5) // Give the server a little break.
 	}
+	return
+}
+
+func generateSinWaveData() float64 {
+	max := 100.0
+	min := 0.0
+	frequency := 0.01
+	amplitude := (max - min) / 2
+	offset := min + amplitude
+	randomize := rand.Float64() * 10
+	return amplitude*math.Sin(2*math.Pi*frequency*float64(time.Since(startTime))) + offset + randomize
 }
 
 // outputData implements passing output data to broker. Remove if not needed.

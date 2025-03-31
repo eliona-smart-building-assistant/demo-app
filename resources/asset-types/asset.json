@@ -6,7 +6,7 @@
 			"subtype": "input",
 			"translation": {
 				"de": "Value",
-				"en": "Status"
+				"en": "Value"
 			},
 			"isDigital": false,
 			"min": 0,
