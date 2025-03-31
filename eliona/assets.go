@@ -25,12 +25,14 @@ import (
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 )
 
-func CreateAssets(config appmodel.Configuration, root asset.Root) error {
+func CreateAssets(config appmodel.Configuration, assets []asset.AssetWithParentReferences) error {
 	for _, projectId := range config.ProjectIDs {
-		assetsCreated, err := asset.CreateAssets(root, projectId)
+		// todo: this does not return assets created anymore, but total number of assets!
+		assetsCreated, err := asset.CreateAssetsBulk(assets, projectId)
 		if err != nil {
 			return err
 		}
+		log.Debug("eliona", "finished creating %v assets", assetsCreated)
 		if assetsCreated != 0 {
 			if err := notifyUser(config.UserId, projectId, assetsCreated); err != nil {
 				return fmt.Errorf("notifying user about CAC: %v", err)

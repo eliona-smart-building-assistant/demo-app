@@ -20,6 +20,7 @@ import (
 	apiserver "demo-app/api/generated"
 	apiservices "demo-app/api/services"
 	appmodel "demo-app/app/model"
+	"demo-app/broker"
 	dbhelper "demo-app/db/helper"
 	"demo-app/eliona"
 	"net/http"
@@ -118,7 +119,16 @@ func CollectData() {
 }
 
 func collectResources(config *appmodel.Configuration) error {
-	// Do the magic here
+	devices, err := broker.GetDevices(*config)
+	if err != nil {
+		log.Error("broker", "getting devices: %v", err)
+		return err
+	}
+	if err := eliona.CreateAssets(*config, devices); err != nil {
+		log.Error("eliona", "creating assets: %v", err)
+		return err
+	}
+
 	return nil
 }
 

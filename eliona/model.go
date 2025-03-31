@@ -16,21 +16,21 @@
 package eliona
 
 import (
+	"context"
 	appmodel "demo-app/app/model"
 	conf "demo-app/db/helper"
-	"context"
 	"fmt"
 
-	"github.com/eliona-smart-building-assistant/go-eliona/asset"
 	"github.com/eliona-smart-building-assistant/go-eliona/utils"
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 )
 
-// TODO: define the asset structure here
-
 type ExampleDevice struct {
 	ID   string `eliona:"id" subtype:"info"`
 	Name string `eliona:"name,filterable" subtype:"info"`
+
+	LocationalParentGAI string
+	FunctionalParentGAI string
 
 	Config *appmodel.Configuration
 }
@@ -75,17 +75,17 @@ func (d *ExampleDevice) SetAssetID(assetID int32, projectID string) error {
 	return nil
 }
 
-func (d *ExampleDevice) GetLocationalChildren() []asset.LocationalNode {
-	return []asset.LocationalNode{}
+func (a *ExampleDevice) GetLocationalParentGAI() string {
+	return a.LocationalParentGAI
 }
 
-func (d *ExampleDevice) GetFunctionalChildren() []asset.FunctionalNode {
-	return []asset.FunctionalNode{}
+func (a *ExampleDevice) GetFunctionalParentGAI() string {
+	return a.FunctionalParentGAI
 }
 
 type Root struct {
-	locationsMap map[string]ExampleDevice
-	devicesSlice []ExampleDevice
+	LocationalParentGAI string
+	FunctionalParentGAI string
 
 	Config *appmodel.Configuration
 }
@@ -117,21 +117,12 @@ func (r *Root) SetAssetID(assetID int32, projectID string) error {
 	return nil
 }
 
-func (r *Root) GetLocationalChildren() []asset.LocationalNode {
-	locationalChildren := make([]asset.LocationalNode, 0, len(r.locationsMap))
-	for _, room := range r.locationsMap {
-		roomCopy := room // Create a copy of room
-		locationalChildren = append(locationalChildren, &roomCopy)
-	}
-	return locationalChildren
+func (a *Root) GetLocationalParentGAI() string {
+	return a.LocationalParentGAI
 }
 
-func (r *Root) GetFunctionalChildren() []asset.FunctionalNode {
-	functionalChildren := make([]asset.FunctionalNode, 0, len(r.devicesSlice))
-	for i := range r.devicesSlice {
-		functionalChildren[i] = &r.devicesSlice[i]
-	}
-	return functionalChildren
+func (a *Root) GetFunctionalParentGAI() string {
+	return a.FunctionalParentGAI
 }
 
 //
