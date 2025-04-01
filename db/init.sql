@@ -35,7 +35,7 @@ create table if not exists demo_app.asset
 	configuration_id bigserial not null references demo_app.configuration(id) ON DELETE CASCADE,
 	project_id       text      not null,
 	global_asset_id  text      not null,
-	provider_id      text      not null,
+	provider_id      text      not null unique,
 	is_root          boolean   not null default false,
 	asset_id         integer
 );
