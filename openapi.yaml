@@ -21,13 +21,13 @@ info:
   description: API to access and configure the Demo app
 externalDocs:
   description: Find out more about the Demo app
-  url: https://doc.eliona.io/collection/eliona-english/eliona-apps/apps/demo-app
+  url: https://doc.eliona.io/collection/eliona-english/eliona-apps/apps/demo
 servers:
   - url: "https://{server}/v1"
     variables:
       server:
-        default: demo-app
-  - url: "https://{environment}.eliona.io/apps/demo-app/api/v1"
+        default: demo
+  - url: "https://{environment}.eliona.io/apps/demo/api/v1"
     variables:
       environment:
         default: name
@@ -36,17 +36,17 @@ tags:
   - name: Configuration
     description: Configure the app
     externalDocs:
-      url: https://github.com/eliona-smart-building-assistant/demo-app-app
+      url: https://github.com/eliona-smart-building-assistant/demo-app
 
   - name: Version
     description: API version
     externalDocs:
-      url: https://github.com/eliona-smart-building-assistant/demo-app-app
+      url: https://github.com/eliona-smart-building-assistant/demo-app
 
   - name: Customization
     description: Help to customize Eliona environment
     externalDocs:
-      url: https://github.com/eliona-smart-building-assistant/demo-app-app
+      url: https://github.com/eliona-smart-building-assistant/demo-app
 
 paths:
   /configs:

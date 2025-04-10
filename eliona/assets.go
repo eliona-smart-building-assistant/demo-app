@@ -16,7 +16,7 @@
 package eliona
 
 import (
-	appmodel "demo-app/app/model"
+	appmodel "demo/app/model"
 	"fmt"
 
 	api "github.com/eliona-smart-building-assistant/go-eliona-api-client/v2"

@@ -16,8 +16,8 @@
 package broker
 
 import (
-	appmodel "demo-app/app/model"
-	"demo-app/eliona"
+	appmodel "demo/app/model"
+	"demo/eliona"
 	"fmt"
 
 	"github.com/eliona-smart-building-assistant/go-eliona/asset"

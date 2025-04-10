@@ -17,12 +17,12 @@ package app
 
 import (
 	"context"
-	apiserver "demo-app/api/generated"
-	apiservices "demo-app/api/services"
-	appmodel "demo-app/app/model"
-	"demo-app/broker"
-	dbhelper "demo-app/db/helper"
-	"demo-app/eliona"
+	apiserver "demo/api/generated"
+	apiservices "demo/api/services"
+	appmodel "demo/app/model"
+	"demo/broker"
+	dbhelper "demo/db/helper"
+	"demo/eliona"
 	"math"
 	"math/rand/v2"
 	"net/http"

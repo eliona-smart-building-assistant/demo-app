@@ -18,7 +18,7 @@ The Demo app requires configuration through Eliona’s settings interface. Below
 
 ### Registering the app in Demo Service
 
-Create credentials in Demo Service to connect the Demo services from Eliona. All required credentials are listed below in the [configuration section](#configure-the-demo-app-app).
+Create credentials in Demo Service to connect the Demo services from Eliona. All required credentials are listed below in the [configuration section](#configure-the-demo-app).
 
 <mark>TODO: Describe the steps where you can get or create the necessary credentials.</mark>
 

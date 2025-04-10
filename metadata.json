@@ -1,5 +1,5 @@
 {
-  "name": "demo-app",
+  "name": "demo",
   "elionaMinVersion": "v11.0.0",
   "displayName": {
     "en": "Demo",
@@ -14,7 +14,7 @@
   ],
   "apiUrl": "v1",
   "apiSpecificationPath": "/version/openapi.json",
-  "documentationUrl": "https://doc.eliona.io/collection/eliona-english/eliona-apps/apps/demo-app",
+  "documentationUrl": "https://doc.eliona.io/collection/eliona-english/eliona-apps/apps/demo",
   "useEnvironment": [
     "CONNECTION_STRING",
     "INIT_CONNECTION_STRING",

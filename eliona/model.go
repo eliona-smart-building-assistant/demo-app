@@ -17,8 +17,8 @@ package eliona
 
 import (
 	"context"
-	appmodel "demo-app/app/model"
-	conf "demo-app/db/helper"
+	appmodel "demo/app/model"
+	conf "demo/db/helper"
 	"fmt"
 
 	"github.com/eliona-smart-building-assistant/go-eliona/utils"

@@ -1,4 +1,4 @@
-module demo-app
+module demo
 
 go 1.24
 

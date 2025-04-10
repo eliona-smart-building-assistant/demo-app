@@ -18,8 +18,8 @@ package dbhelper
 import (
 	"context"
 	"database/sql"
-	appmodel "demo-app/app/model"
-	dbgen "demo-app/db/generated"
+	appmodel "demo/app/model"
+	dbgen "demo/db/generated"
 	"encoding/json"
 	"errors"
 	"fmt"

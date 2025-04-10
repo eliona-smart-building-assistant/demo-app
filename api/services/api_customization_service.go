@@ -17,8 +17,8 @@ package apiservices
 
 import (
 	"context"
-	apiserver "demo-app/api/generated"
-	"demo-app/eliona"
+	apiserver "demo/api/generated"
+	"demo/eliona"
 	"net/http"
 )
 
