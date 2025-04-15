@@ -1,7 +1,7 @@
 openapi: 3.0.3
 
 #  This file is part of the Eliona project.
-#  Copyright © 2024 IoTEC AG. All Rights Reserved.
+#  Copyright © 2025 IoTEC AG. All Rights Reserved.
 #  ______ _ _
 # |  ____| (_)
 # | |__  | |_  ___  _ __   __ _
@@ -213,38 +213,47 @@ components:
         type: integer
         format: int64
         example: 4711
+        x-schema-bind:
+          $ref: "#/components/schemas/Configuration/properties/id"
 
   schemas:
     Configuration:
+      title: Configuration
       type: object
       description: Each configuration defines access to provider's API.
       properties:
         id:
+          title: ID
           type: integer
           format: int64
           description: Internal identifier for the configured API (created automatically).
           readOnly: true
           nullable: true
         apiKey:
+          title: API key
           type: string
           format: string
           description: There should be things like API address, access keys and so on.
           example: 12345
         enable:
+          title: Enable
           type: boolean
           description: Flag to enable or disable fetching from this API
           default: true
           nullable: true
         refreshInterval:
+          title: Refresh interval
           type: integer
           description: Interval in seconds for collecting data from API
           default: 60
         requestTimeout:
+          title: Request timeout
           type: integer
           description: Timeout in seconds
           default: 120
           nullable: true
         assetFilter:
+          title: Asset filter
           $ref: "#/components/schemas/AssetFilter"
           nullable: true
           example:
@@ -254,20 +263,24 @@ components:
               [{ "parameter": "ipAddress", "regex": "192\\.168\\..*" }],
             ]
         active:
+          title: Active
           type: boolean
           readOnly: true
           description: Set to `true` by the app when running and to `false` when app is stopped
           nullable: true
         projectIDs:
+          title: Projects
           type: array
           description: List of Eliona project ids for which this device should collect data. For each project id all smart devices are automatically created as an asset in Eliona. The mapping between Eliona is stored as an asset mapping in the Demo app.
           nullable: true
           items:
             type: string
+            x-eliona-bind: public.eliona_project.proj_id
           example:
             - "42"
             - "99"
         userId:
+          title: User ID
           type: string
           readOnly: true
           description: ID of the last Eliona user who created or updated the configuration
