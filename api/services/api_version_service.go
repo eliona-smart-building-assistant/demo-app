@@ -1,5 +1,5 @@
 //  This file is part of the Eliona project.
-//  Copyright © 2024 IoTEC AG. All Rights Reserved.
+//  Copyright © 2025 IoTEC AG. All Rights Reserved.
 //  ______ _ _
 // |  ____| (_)
 // | |__  | |_  ___  _ __   __ _
@@ -105,6 +105,7 @@ func checkForUnsupportedTypes(i interface{}, path string) error {
 	return nil
 }
 
+var Version string        // injected during linking, see Dockerfile
 var BuildTimestamp string // injected during linking, see Dockerfile
 var GitCommit string      // injected during linking, see Dockerfile
 
@@ -113,9 +114,10 @@ func (s *VersionAPIService) GetVersion(ctx context.Context) (apiserver.ImplRespo
 	return apiserver.Response(http.StatusOK, common.Ptr(version())), nil
 }
 
-func version() map[string]any {
-	return map[string]any{
-		"timestamp": BuildTimestamp,
-		"commit":    GitCommit,
+func version() apiserver.Version {
+	return apiserver.Version{
+		Version:   Version,
+		Timestamp: BuildTimestamp,
+		Commit:    GitCommit,
 	}
 }
