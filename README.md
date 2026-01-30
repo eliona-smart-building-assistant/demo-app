@@ -10,8 +10,6 @@ The app needs environment variables and database tables for configuration. To ed
 
 To start and initialize an app in an Eliona environment, the app has to be registered in Eliona. For this, entries in database tables `public.eliona_app` and `public.eliona_store` are necessary.
 
-This initialization can be handled by the `reset.sql` script.
-
 
 ### Environment variables
 
@@ -19,11 +17,7 @@ This initialization can be handled by the `reset.sql` script.
 
 - `CONNECTION_STRING`: configures the [Eliona database](https://github.com/eliona-smart-building-assistant/go-eliona/tree/main/db). Otherwise, the app can't be initialized and started (e.g. `postgres://user:pass@localhost:5432/iot`).
 
-- `INIT_CONNECTION_STRING`: configures the [Eliona database](https://github.com/eliona-smart-building-assistant/go-eliona/tree/main/db) for app initialization like creating schema and tables (e.g. `postgres://user:pass@localhost:5432/iot`). Default is content of `CONNECTION_STRING`.
-
 - `API_ENDPOINT`:  configures the endpoint to access the [Eliona API v2](https://github.com/eliona-smart-building-assistant/eliona-api). Otherwise, the app can't be initialized and started. (e.g. `http://api-v2:3000/v2`)
-
-- `API_TOKEN`: defines the secret to authenticate the app and access the Eliona API.
 
 - `API_SERVER_PORT`(optional): define the port the API server listens. The default value is Port `3000`. <mark>Todo: Decide if the app needs its own API. If so, an API server have to implemented and the port have to be configurable.</mark>
 
@@ -91,7 +85,7 @@ For the API server the [OpenAPI Generator](https://openapi-generator.tech/docs/g
 
 ### Generate Database access ###
 
-For the database access [SQLBoiler](https://github.com/volatiletech/sqlboiler) is used. The easiest way to generate the database files is to use one of the predefined generation script which use the SQLBoiler implementation.
+For the database access [SQLBoiler](https://github.com/aarondl/sqlboiler) is used. The easiest way to generate the database files is to use one of the predefined generation script which use the SQLBoiler implementation.
 
 ```
 .\generate-db.cmd # Windows

@@ -18,16 +18,19 @@ package dbhelper
 import (
 	"context"
 	"database/sql"
-	appmodel "demo/app/model"
-	dbgen "demo/db/generated"
+	appmodel "demo/v2/app/model"
+	dbgen "demo/v2/db/generated"
 	"encoding/json"
 	"errors"
 	"fmt"
 
-	"github.com/eliona-smart-building-assistant/go-eliona/frontend"
+	"github.com/aarondl/null/v8"
+	"github.com/aarondl/sqlboiler/v4/boil"
+	"github.com/eliona-smart-building-assistant/go-eliona/v2/app"
+	"github.com/eliona-smart-building-assistant/go-eliona/v2/frontend"
 	"github.com/eliona-smart-building-assistant/go-utils/common"
-	"github.com/volatiletech/null/v8"
-	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/eliona-smart-building-assistant/go-utils/log"
+	"github.com/google/uuid"
 )
 
 var ErrBadRequest = errors.New("bad request")
@@ -70,20 +73,54 @@ func GetConfig(ctx context.Context, configID int64) (appmodel.Configuration, err
 	return appConfig, nil
 }
 
-func DeleteConfig(ctx context.Context, configID int64) error {
+func GetTenantConfig(ctx context.Context, configID int64, tenantId uuid.UUID) (appmodel.Configuration, error) {
+	dbConfig, err := dbgen.Configurations(
+		dbgen.ConfigurationWhere.ID.EQ(configID),
+		dbgen.ConfigurationWhere.TenantID.EQ(tenantId.String()),
+	).OneG(ctx)
+	if errors.Is(err, sql.ErrNoRows) {
+		return appmodel.Configuration{}, ErrNotFound
+	}
+	if err != nil {
+		return appmodel.Configuration{}, fmt.Errorf("fetching config from database: %v", err)
+	}
+	appConfig, err := toAppConfig(dbConfig)
+	if err != nil {
+		return appmodel.Configuration{}, fmt.Errorf("creating App config from DB config: %v", err)
+	}
+	return appConfig, nil
+}
+
+func DeleteConfig(ctx context.Context, configID int64, tenantId uuid.UUID) error {
+	// First, verify that the configuration exists and belongs to the specified tenant
+	configExists, err := dbgen.Configurations(
+		dbgen.ConfigurationWhere.ID.EQ(configID),
+		dbgen.ConfigurationWhere.TenantID.EQ(tenantId.String()),
+	).ExistsG(ctx)
+	if err != nil {
+		return fmt.Errorf("checking config existence: %v", err)
+	}
+	if !configExists {
+		return ErrNotFound
+	}
+
+	// Delete assets that belong to this configuration
 	if _, err := dbgen.Assets(
 		dbgen.AssetWhere.ConfigurationID.EQ(configID),
 	).DeleteAllG(ctx); err != nil {
 		return fmt.Errorf("deleting assets from database: %v", err)
 	}
+
+	// Delete the configuration that matches both configID and tenantId
 	count, err := dbgen.Configurations(
 		dbgen.ConfigurationWhere.ID.EQ(configID),
+		dbgen.ConfigurationWhere.TenantID.EQ(tenantId.String()),
 	).DeleteAllG(ctx)
 	if err != nil {
 		return fmt.Errorf("deleting config from database: %v", err)
 	}
 	if count > 1 {
-		return fmt.Errorf("shouldn't happen: deleted more (%v) configs by ID", count)
+		return fmt.Errorf("shouldn't happen: deleted more (%v) configs by ID and tenant", count)
 	}
 	if count == 0 {
 		return ErrNotFound
@@ -92,9 +129,10 @@ func DeleteConfig(ctx context.Context, configID int64) error {
 }
 
 func toDbConfig(ctx context.Context, appConfig appmodel.Configuration) (dbConfig dbgen.Configuration, err error) {
-	dbConfig.APIKey = appConfig.ApiKey
+	dbConfig.TenantID = appConfig.TenantId.String()
 
 	dbConfig.ID = appConfig.Id
+	dbConfig.SiteID = null.StringFrom(appConfig.SiteID)
 	dbConfig.RefreshInterval = appConfig.RefreshInterval
 	dbConfig.RequestTimeout = appConfig.RequestTimeout
 	af, err := json.Marshal(appConfig.AssetFilter)
@@ -104,7 +142,6 @@ func toDbConfig(ctx context.Context, appConfig appmodel.Configuration) (dbConfig
 	dbConfig.AssetFilter = af
 	dbConfig.Active = appConfig.Active
 	dbConfig.Enable = appConfig.Enable
-	dbConfig.ProjectIds = appConfig.ProjectIDs
 
 	env := frontend.GetEnvironment(ctx)
 	if env != nil {
@@ -115,9 +152,21 @@ func toDbConfig(ctx context.Context, appConfig appmodel.Configuration) (dbConfig
 }
 
 func toAppConfig(dbConfig *dbgen.Configuration) (appConfig appmodel.Configuration, err error) {
-	appConfig.ApiKey = dbConfig.APIKey
+	var apikey_err error
+
+	tenantUUID, err := uuid.Parse(dbConfig.TenantID)
+	if err != nil {
+		return appmodel.Configuration{}, fmt.Errorf("parsing tenant ID as UUID: %v", err)
+	}
+
+	appConfig.ApiKey, apikey_err = app.GetApiKey("demo", GetDB(), tenantUUID)
+	if apikey_err != nil {
+		log.Fatal("conf", "api key not found for tenant %s in DB for: %v", dbConfig.TenantID, apikey_err)
+	}
 
 	appConfig.Id = dbConfig.ID
+	appConfig.TenantId = tenantUUID
+	appConfig.SiteID = dbConfig.SiteID.String
 	appConfig.Enable = dbConfig.Enable
 	appConfig.RefreshInterval = dbConfig.RefreshInterval
 	appConfig.RequestTimeout = dbConfig.RequestTimeout
@@ -127,13 +176,30 @@ func toAppConfig(dbConfig *dbgen.Configuration) (appConfig appmodel.Configuratio
 	}
 	appConfig.AssetFilter = af
 	appConfig.Active = dbConfig.Active
-	appConfig.ProjectIDs = dbConfig.ProjectIds
 	appConfig.UserId = dbConfig.UserID
 	return appConfig, nil
 }
 
 func GetConfigs(ctx context.Context) ([]appmodel.Configuration, error) {
 	dbConfigs, err := dbgen.Configurations().AllG(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var appConfigs []appmodel.Configuration
+	for _, dbConfig := range dbConfigs {
+		ac, err := toAppConfig(dbConfig)
+		if err != nil {
+			return nil, fmt.Errorf("creating App config from DB config: %v", err)
+		}
+		appConfigs = append(appConfigs, ac)
+	}
+	return appConfigs, nil
+}
+
+func GetTenantConfigs(ctx context.Context, tenantId uuid.UUID) ([]appmodel.Configuration, error) {
+	dbConfigs, err := dbgen.Configurations(
+		dbgen.ConfigurationWhere.TenantID.EQ(tenantId.String()),
+	).AllG(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -162,10 +228,9 @@ func SetAllConfigsInactive(ctx context.Context) (int64, error) {
 	})
 }
 
-func InsertAsset(ctx context.Context, config appmodel.Configuration, projId string, globalAssetID string, assetId int32, providerId string, isRoot bool) error {
+func InsertAsset(ctx context.Context, config appmodel.Configuration, globalAssetID string, assetId int32, providerId string, isRoot bool) error {
 	dbAsset := dbgen.Asset{
 		ConfigurationID: config.Id,
-		ProjectID:       projId,
 		GlobalAssetID:   globalAssetID,
 		AssetID:         null.Int32From(assetId),
 		ProviderID:      providerId,
@@ -174,10 +239,9 @@ func InsertAsset(ctx context.Context, config appmodel.Configuration, projId stri
 	return dbAsset.UpsertG(ctx, true, []string{dbgen.AssetColumns.ProviderID}, boil.Blacklist("id"), boil.Infer())
 }
 
-func GetAssetId(ctx context.Context, config appmodel.Configuration, projId string, globalAssetID string) (*int32, error) {
+func GetAssetId(ctx context.Context, config appmodel.Configuration, globalAssetID string) (*int32, error) {
 	dbAsset, err := dbgen.Assets(
 		dbgen.AssetWhere.ConfigurationID.EQ(config.Id),
-		dbgen.AssetWhere.ProjectID.EQ(projId),
 		dbgen.AssetWhere.GlobalAssetID.EQ(globalAssetID),
 	).AllG(ctx)
 	if err != nil || len(dbAsset) == 0 {
@@ -198,6 +262,7 @@ func toAppAsset(dbAsset dbgen.Asset, config appmodel.Configuration) appmodel.Ass
 }
 
 func GetAssetById(assetId int32) (appmodel.Asset, error) {
+	//Not used anywhere, but probably will need to support tenantId if used in future
 	asset, err := dbgen.FindAssetG(context.Background(), int64(assetId))
 	if err != nil {
 		return appmodel.Asset{}, fmt.Errorf("fetching asset: %v", err)
@@ -219,7 +284,7 @@ func GetAssetById(assetId int32) (appmodel.Asset, error) {
 	return toAppAsset(*asset, config), nil
 }
 
-func GetRootAssets() ([]appmodel.Asset, error) {
+func GetRootAssets(tenantId uuid.UUID) ([]appmodel.Asset, error) {
 	assets, err := dbgen.Assets(
 		dbgen.AssetWhere.IsRoot.EQ(true),
 	).AllG(context.Background())
@@ -227,46 +292,50 @@ func GetRootAssets() ([]appmodel.Asset, error) {
 		return nil, fmt.Errorf("fetching root assets: %v", err)
 	}
 
-	appAssets := make([]appmodel.Asset, 0, len(assets))
-	for _, asset := range assets {
-		c, err := asset.Configuration().OneG(context.Background())
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, ErrNotFound
-		}
-		if err != nil {
-			return nil, fmt.Errorf("fetching configuration: %v", err)
-		}
-		config, err := toAppConfig(c)
-		if err != nil {
-			return nil, fmt.Errorf("translating configuration: %v", err)
-		}
-		appAssets = append(appAssets, toAppAsset(*asset, config))
-	}
-	return appAssets, nil
+	return FilterAssetsByTenant(assets, tenantId)
 }
 
-func GetAllDevices() ([]appmodel.Asset, error) {
+func GetAllDevices(tenantId uuid.UUID) ([]appmodel.Asset, error) {
 	assets, err := dbgen.Assets(
 		dbgen.AssetWhere.IsRoot.EQ(false),
 	).AllG(context.Background())
 	if err != nil {
-		return nil, fmt.Errorf("fetching root assets: %v", err)
+		return nil, fmt.Errorf("fetching assets for tenant: %v", err)
 	}
 
-	appAssets := make([]appmodel.Asset, 0, len(assets))
+	return FilterAssetsByTenant(assets, tenantId)
+}
+
+func FilterAssetsByTenant(assets dbgen.AssetSlice, tenantId uuid.UUID) ([]appmodel.Asset, error) {
+	appAssets := make([]appmodel.Asset, 0)
 	for _, asset := range assets {
 		c, err := asset.Configuration().OneG(context.Background())
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, ErrNotFound
+			continue // Skip assets without configuration
 		}
 		if err != nil {
 			return nil, fmt.Errorf("fetching configuration: %v", err)
 		}
-		config, err := toAppConfig(c)
-		if err != nil {
-			return nil, fmt.Errorf("translating configuration: %v", err)
+		// Only include assets whose configuration belongs to the specified tenant
+		if c.TenantID == tenantId.String() {
+			config, err := toAppConfig(c)
+			if err != nil {
+				return nil, fmt.Errorf("translating configuration: %v", err)
+			}
+			appAssets = append(appAssets, toAppAsset(*asset, config))
 		}
-		appAssets = append(appAssets, toAppAsset(*asset, config))
 	}
 	return appAssets, nil
+}
+
+func ParseTenantIdFromEnv(ctx context.Context) (uuid.UUID, error) {
+	env := frontend.GetEnvironment(ctx)
+	if env == nil {
+		return uuid.UUID{}, fmt.Errorf("missing environment JWT")
+	}
+	parsed, err := uuid.Parse(env.TenantId)
+	if err != nil {
+		return uuid.UUID{}, fmt.Errorf("tenant isn't a valid UUID: %s", env.TenantId)
+	}
+	return parsed, err
 }

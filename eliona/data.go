@@ -16,45 +16,44 @@
 package eliona
 
 import (
-	appmodel "demo/app/model"
+	appmodel "demo/v2/app/model"
 	"fmt"
 	"time"
 
-	api "github.com/eliona-smart-building-assistant/go-eliona-api-client/v2"
-	"github.com/eliona-smart-building-assistant/go-eliona/asset"
+	api "github.com/eliona-smart-building-assistant/go-eliona-api-client/v3"
+	"github.com/eliona-smart-building-assistant/go-eliona/v2/asset"
+	"github.com/eliona-smart-building-assistant/go-eliona/v2/client"
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 )
 
 const ClientReference string = "demo"
 
 func UpsertAssetData(config appmodel.Configuration, assets []ExampleDevice) error {
-	for _, projectId := range config.ProjectIDs {
-		for _, a := range assets {
-			log.Debug("Eliona", "upserting data for asset: config %d and asset '%v'", config.Id, a.GetGAI())
-			assetId, err := a.GetAssetID(projectId)
-			if err != nil {
-				return err
-			}
-			if assetId == nil {
-				// This might happen in case of filtered or newly added devices.
-				log.Debug("conf", "unable to find asset ID for %v", a.GetGAI())
-				continue
-			}
+	for _, a := range assets {
+		log.Debug("Eliona", "upserting data for asset: config %d and asset '%v'", config.Id, a.GetGAI())
+		assetId, err := a.GetAssetID()
+		if err != nil {
+			return err
+		}
+		if assetId == nil {
+			// This might happen in case of filtered or newly added devices.
+			log.Debug("conf", "unable to find asset ID for %v", a.GetGAI())
+			continue
+		}
 
-			data := asset.Data{
-				AssetId:         *assetId,
-				Data:            a,
-				ClientReference: ClientReference,
-			}
-			if err := asset.UpsertAssetDataIfAssetExists(data); err != nil {
-				return fmt.Errorf("upserting data: %v", err)
-			}
+		data := asset.Data{
+			AssetId:         *assetId,
+			Data:            a,
+			ClientReference: ClientReference,
+		}
+		if err := asset.UpsertAssetDataIfAssetExists(client.ApiEndpointString(), config.ApiKey, data); err != nil {
+			return fmt.Errorf("upserting data: %v", err)
 		}
 	}
 	return nil
 }
 
-func UpsertData(assetID int32, assetData map[string]any, timestamp time.Time, subtype api.DataSubtype) error {
+func UpsertData(config appmodel.Configuration, assetID int32, assetData map[string]any, timestamp time.Time, subtype api.DataSubtype) error {
 	cr := ClientReference
 
 	data := api.Data{
@@ -65,7 +64,7 @@ func UpsertData(assetID int32, assetData map[string]any, timestamp time.Time, su
 		ClientReference: *api.NewNullableString(&cr),
 		// AssetTypeName: api.NullableString{}, No need to fill, it's only for selection
 	}
-	if err := asset.UpsertDataIfAssetExists(data); err != nil {
+	if err := asset.UpsertDataIfAssetExists(client.ApiEndpointString(), config.ApiKey, data); err != nil {
 		return fmt.Errorf("upserting data: %v", err)
 	}
 	return nil

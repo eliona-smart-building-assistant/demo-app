@@ -1,43 +1,28 @@
-go install github.com/volatiletech/sqlboiler/v4@latest
-go install github.com/volatiletech/sqlboiler/v4/drivers/sqlboiler-psql@latest
+go install github.com/aarondl/sqlboiler/v4@latest
+go install github.com/aarondl/sqlboiler/v4/drivers/sqlboiler-psql@latest
 
-go get github.com/volatiletech/sqlboiler/v4
-go get github.com/volatiletech/null/v8
+go get github.com/aarondl/sqlboiler/v4
+go get github.com/aarondl/null/v8
 
-rem Read the content of init.sql
-set "INIT_SQL_CONTENT="
-for /f "delims=" %%i in ('type "%cd%\db\init.sql"') do set "INIT_SQL_CONTENT=!INIT_SQL_CONTENT!%%i\n"
-
-rem Create init_wrapper.sql to run the script in a transaction. This is needed for
-rem COMMIT AND CHAIN to work in the script.
-(
-    echo BEGIN;
-    echo %INIT_SQL_CONTENT%
-    echo COMMIT;
-) > %cd%\db\init_wrapper.sql
-
-docker run -d ^
-    --name "app_sql_boiler_code_generation" ^
+docker run --rm -d ^
+    --name "eliona_database_code_generation" ^
     -e "POSTGRES_PASSWORD=secret" ^
     -p "6001:5432" ^
-    -v "%cd%"\db\init_wrapper.sql:/docker-entrypoint-initdb.d/init_wrapper.sql ^
-    debezium/postgres:12  > NUL
+    -v "%cd%":/local ^
+    eliona.azurecr.io/core/postgres16:latest
 
-rem Wait for PostgreSQL to initialize
-timeout /t 5
+docker run --rm ^
+    --name "eliona_database_init_code_generation" ^
+    -e "CONNECTION_STRING=postgres://postgres:secret@host.docker.internal:6001/postgres" ^
+    -e "INIT_CONNECTION_STRING=postgres://postgres:secret@host.docker.internal:6001/postgres" ^
+    eliona.azurecr.io/core/database:tenants
+
+docker image rm "eliona.azurecr.io/core/database:tenants"
 
 sqlboiler psql ^
-    -c db/sqlboiler.toml ^
+    -c sqlboiler.toml ^
     --wipe --no-tests
 
-docker stop "app_sql_boiler_code_generation" > NUL
-
-docker logs "app_sql_boiler_code_generation" 2>&1 | findstr "ERROR" || (
-    echo All good.
-)
-
-docker rm "app_sql_boiler_code_generation" > NUL
-
-del .\db\init_wrapper.sql
+docker stop "eliona_database_code_generation"
 
 go mod tidy

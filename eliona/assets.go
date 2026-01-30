@@ -16,45 +16,43 @@
 package eliona
 
 import (
-	appmodel "demo/app/model"
+	appmodel "demo/v2/app/model"
 	"fmt"
 
-	api "github.com/eliona-smart-building-assistant/go-eliona-api-client/v2"
-	"github.com/eliona-smart-building-assistant/go-eliona/asset"
-	"github.com/eliona-smart-building-assistant/go-eliona/client"
+	api "github.com/eliona-smart-building-assistant/go-eliona-api-client/v3"
+	"github.com/eliona-smart-building-assistant/go-eliona/v2/asset"
+	"github.com/eliona-smart-building-assistant/go-eliona/v2/client"
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 )
 
 var devicesCount map[int64]int
 
-func CreateAssets(config appmodel.Configuration, assets []asset.AssetWithParentReferences) error {
+func CreateAssets(config appmodel.Configuration, assets []asset.AssetLikeWithParentReferences) error {
 	if devicesCount == nil {
 		devicesCount = make(map[int64]int)
 	}
-	for _, projectId := range config.ProjectIDs {
-		// todo: this does not return assets created anymore, but total number of assets!
-		assetsCreated, err := asset.CreateAssetsBulk(assets, projectId)
-		if err != nil {
-			return err
+	// todo: this does not return assets created anymore, but total number of assets!
+	assetsCreated, err := asset.CreateAssetsBulk(client.ApiEndpointString(), config.ApiKey, assets)
+	if err != nil {
+		return err
+	}
+	log.Debug("eliona", "finished creating %v assets", assetsCreated)
+	if assetsCreated != 0 && devicesCount[config.Id] != assetsCreated {
+		if err := notifyUser(config.UserId, config.SiteID, assetsCreated, config); err != nil {
+			return fmt.Errorf("notifying user about CAC: %v", err)
 		}
-		log.Debug("eliona", "finished creating %v assets", assetsCreated)
-		if assetsCreated != 0 && devicesCount[config.Id] != assetsCreated {
-			if err := notifyUser(config.UserId, projectId, assetsCreated); err != nil {
-				return fmt.Errorf("notifying user about CAC: %v", err)
-			}
-			devicesCount[config.Id] = assetsCreated
-		}
+		devicesCount[config.Id] = assetsCreated
 	}
 	return nil
 }
 
-func notifyUser(userId string, projectId string, assetsCreated int) error {
-	receipt, _, err := client.NewClient().CommunicationAPI.
-		PostNotification(client.AuthenticationContext()).
+func notifyUser(userId string, siteId string, assetsCreated int, config appmodel.Configuration) error {
+	receipt, _, err := client.NewClient(client.ApiEndpointString()).CommunicationAPI.
+		PostNotification(client.AuthenticationContext(config.ApiKey)).
 		Notification(
 			api.Notification{
-				User:      userId,
-				ProjectId: *api.NewNullableString(&projectId),
+				User:   userId,
+				SiteId: *api.NewNullableString(&siteId),
 				Message: *api.NewNullableTranslation(&api.Translation{
 					De: api.PtrString(fmt.Sprintf("Demo App hat %d neue Assets angelegt. Diese sind nun im Asset-Management verfügbar.", assetsCreated)),
 					En: api.PtrString(fmt.Sprintf("Demo app added %v new assets. They are now available in Asset Management.", assetsCreated)),

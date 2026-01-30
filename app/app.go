@@ -17,25 +17,23 @@ package app
 
 import (
 	"context"
-	apiserver "demo/api/generated"
-	apiservices "demo/api/services"
-	appmodel "demo/app/model"
-	"demo/broker"
-	dbhelper "demo/db/helper"
-	"demo/eliona"
+	apiserver "demo/v2/api/generated"
+	apiservices "demo/v2/api/services"
+	appmodel "demo/v2/app/model"
+	"demo/v2/broker"
+	dbhelper "demo/v2/db/helper"
+	"demo/v2/eliona"
 	"math"
 	"math/rand/v2"
 	"net/http"
 	"sync"
 	"time"
 
-	api "github.com/eliona-smart-building-assistant/go-eliona-api-client/v2"
-	"github.com/eliona-smart-building-assistant/go-eliona/app"
-	"github.com/eliona-smart-building-assistant/go-eliona/asset"
-	"github.com/eliona-smart-building-assistant/go-eliona/dashboard"
-	"github.com/eliona-smart-building-assistant/go-eliona/frontend"
+	api "github.com/eliona-smart-building-assistant/go-eliona-api-client/v3"
+	"github.com/eliona-smart-building-assistant/go-eliona/v2/asset"
+	"github.com/eliona-smart-building-assistant/go-eliona/v2/client"
+	"github.com/eliona-smart-building-assistant/go-eliona/v2/frontend"
 	"github.com/eliona-smart-building-assistant/go-utils/common"
-	"github.com/eliona-smart-building-assistant/go-utils/db"
 	utilshttp "github.com/eliona-smart-building-assistant/go-utils/http"
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 )
@@ -51,21 +49,6 @@ const (
 func changeAppStatus(status int) {
 	appStatus = status
 	Heartbeat()
-}
-
-func Initialize() {
-	ctx := context.Background()
-
-	// Necessary to close used init resources
-	conn := db.NewInitConnectionWithContextAndApplicationName(ctx, app.AppName())
-	defer conn.Close(ctx)
-
-	// Init the app before the first run.
-	app.Init(conn, app.AppName(),
-		app.ExecSqlFile("db/init.sql"),
-		asset.InitAssetTypeFiles("resources/asset-types/*.json"),
-		dashboard.InitWidgetTypeFiles("resources/widget-types/*.json"),
-	)
 }
 
 var once sync.Once
@@ -96,18 +79,23 @@ func CollectData() {
 			continue
 		}
 
+		err := asset.InitAssetTypeFiles(client.ApiEndpointString(), config.ApiKey, "resources/asset-type-*.json")
+		if err != nil {
+			return
+		}
+
 		if !config.Active {
 			dbhelper.SetConfigActiveState(context.Background(), config, true)
 			log.Info("dbhelper", "Collecting initialized with Configuration %d:\n"+
+				"SiteId: %s\n"+
 				"Enable: %t\n"+
 				"Refresh Interval: %d\n"+
-				"Request Timeout: %d\n"+
-				"Project IDs: %v\n",
+				"Request Timeout: %d\n",
 				config.Id,
+				config.SiteID,
 				config.Enable,
 				config.RefreshInterval,
-				config.RequestTimeout,
-				config.ProjectIDs)
+				config.RequestTimeout)
 		}
 
 		common.RunOnceWithParam(func(config appmodel.Configuration) {
@@ -139,7 +127,20 @@ func collectResources(config appmodel.Configuration) error {
 }
 
 func GenerateData() {
-	assets, err := dbhelper.GetAllDevices()
+	configs, err := dbhelper.GetConfigs(context.Background())
+	if err != nil {
+		log.Fatal("app", "couldn't read configs from DB: %v", err)
+	}
+	for _, config := range configs {
+		if err != nil {
+			log.Fatal("conf", "api key not found for tenant %s in DB for: %v", config.TenantId, err)
+		}
+		go generateData(config)
+	}
+}
+
+func generateData(config appmodel.Configuration) {
+	assets, err := dbhelper.GetAllDevices(config.TenantId)
 	if err != nil {
 		log.Error("dbhelper", "getting assets: %v", err)
 		return
@@ -149,7 +150,7 @@ func GenerateData() {
 		data := map[string]any{
 			"value": value,
 		}
-		if err := eliona.UpsertData(asset.AssetID, data, time.Now(), api.SUBTYPE_INPUT); err != nil {
+		if err := eliona.UpsertData(config, asset.AssetID, data, time.Now(), api.INPUT); err != nil {
 			log.Error("eliona", "upserting data. %v", err)
 			return
 		}
@@ -174,14 +175,27 @@ func outputData(asset appmodel.Asset, data map[string]interface{}) error {
 }
 
 func Heartbeat() {
-	roots, err := dbhelper.GetRootAssets()
+	configs, err := dbhelper.GetConfigs(context.Background())
+	if err != nil {
+		log.Fatal("app", "couldn't read configs from DB: %v", err)
+	}
+	for _, config := range configs {
+		if err != nil {
+			log.Fatal("conf", "api key not found for tenant %s in DB for: %v", config.TenantId, err)
+		}
+		go heartbeat(config)
+	}
+}
+
+func heartbeat(config appmodel.Configuration) {
+	roots, err := dbhelper.GetRootAssets(config.TenantId)
 	if err != nil {
 		log.Error("dbhelper", "getting root assets: %v", err)
 		return
 	}
 
 	for _, root := range roots {
-		err := eliona.UpsertData(root.AssetID, map[string]any{"status": appStatus}, time.Now(), api.SUBTYPE_STATUS)
+		err := eliona.UpsertData(config, root.AssetID, map[string]any{"status": appStatus}, time.Now(), api.STATUS)
 		if err != nil {
 			log.Error("eliona", "upserting data as heartbeat: %v", err)
 			return

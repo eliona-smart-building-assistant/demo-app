@@ -16,14 +16,14 @@
 package main
 
 import (
-	"demo/app"
+	"context"
+	"demo/v2/app"
+	dbhelper "demo/v2/db/helper"
 	"time"
 
-	elionaapp "github.com/eliona-smart-building-assistant/go-eliona/app"
+	"github.com/aarondl/sqlboiler/v4/boil"
 	"github.com/eliona-smart-building-assistant/go-utils/common"
-	"github.com/eliona-smart-building-assistant/go-utils/db"
 	"github.com/eliona-smart-building-assistant/go-utils/log"
-	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
 // The main function starts the app by starting all services necessary for this app and waits
@@ -31,22 +31,15 @@ import (
 func main() {
 	log.Info("main", "Starting the app.")
 
-	// Set default database to use boil.*G functions.
-	database := db.Database(elionaapp.AppName())
-	defer database.Close()
-	boil.SetDB(database)
+	// Init Database
+	pool := dbhelper.InitDefaultDB()
+	defer pool.Close(context.Background())
 
 	// Set the database logging level.
 	if log.Lev() >= log.TraceLevel {
 		boil.DebugMode = true
 		boil.DebugWriter = log.GetWriter(log.TraceLevel, "database")
 	}
-
-	// Necessary to close used init resources, because db.Pool() is used in this app.
-	defer db.ClosePool()
-
-	// Initialize the app
-	app.Initialize()
 
 	// Starting the service to collect the data for this app.
 	common.WaitForWithOs(

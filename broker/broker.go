@@ -16,26 +16,27 @@
 package broker
 
 import (
-	appmodel "demo/app/model"
-	"demo/eliona"
+	appmodel "demo/v2/app/model"
+	"demo/v2/eliona"
 	"fmt"
 
-	"github.com/eliona-smart-building-assistant/go-eliona/asset"
+	"github.com/eliona-smart-building-assistant/go-eliona/v2/asset"
 )
 
 func TestAuthentication(config appmodel.Configuration) error {
-	if config.ApiKey != "12345" {
-		return fmt.Errorf("Incorrect API key!")
-	}
 	return nil
+	// if config.ApiKey != "12345" {
+	// 	return fmt.Errorf("Incorrect API key!")
+	// }
+	// return nil
 }
 
-func GetDevices(config appmodel.Configuration) ([]asset.AssetWithParentReferences, error) {
+func GetDevices(config appmodel.Configuration) ([]asset.AssetLikeWithParentReferences, error) {
 	if err := TestAuthentication(config); err != nil {
 		return nil, err
 	}
 
-	assets := []asset.AssetWithParentReferences{}
+	assets := []asset.AssetLikeWithParentReferences{}
 	root := eliona.Root{
 		Config: &config,
 	}

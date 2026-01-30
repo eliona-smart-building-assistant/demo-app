@@ -17,13 +17,15 @@ package apiservices
 
 import (
 	"context"
-	apiserver "demo/api/generated"
-	appmodel "demo/app/model"
-	"demo/broker"
-	dbhelper "demo/db/helper"
+	apiserver "demo/v2/api/generated"
+	appmodel "demo/v2/app/model"
+	"demo/v2/broker"
+	dbhelper "demo/v2/db/helper"
 	"errors"
 	"fmt"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
 // ConfigurationAPIService is a service that implements the logic for the ConfigurationAPIServicer
@@ -38,7 +40,12 @@ func NewConfigurationAPIService() apiserver.ConfigurationAPIServicer {
 }
 
 func (s *ConfigurationAPIService) GetConfigurations(ctx context.Context) (apiserver.ImplResponse, error) {
-	appConfigs, err := dbhelper.GetConfigs(ctx)
+	tenantId, err := dbhelper.ParseTenantIdFromEnv(ctx)
+	if err != nil {
+		return apiserver.ImplResponse{Code: http.StatusBadRequest}, err
+	}
+
+	appConfigs, err := dbhelper.GetTenantConfigs(ctx, tenantId)
 	if err != nil {
 		return apiserver.ImplResponse{Code: http.StatusInternalServerError}, err
 	}
@@ -50,7 +57,13 @@ func (s *ConfigurationAPIService) GetConfigurations(ctx context.Context) (apiser
 }
 
 func (s *ConfigurationAPIService) PostConfiguration(ctx context.Context, config apiserver.Configuration) (apiserver.ImplResponse, error) {
-	appConfig := toAppConfig(config)
+	tenantId, err := dbhelper.ParseTenantIdFromEnv(ctx)
+	if err != nil {
+		return apiserver.ImplResponse{Code: http.StatusBadRequest}, err
+	}
+
+	appConfig := toAppConfig(config, tenantId)
+
 	if err := broker.TestAuthentication(appConfig); err != nil {
 		return apiserver.ImplResponse{Code: http.StatusBadRequest}, fmt.Errorf("testing authentication: %v", err)
 	}
@@ -62,7 +75,12 @@ func (s *ConfigurationAPIService) PostConfiguration(ctx context.Context, config 
 }
 
 func (s *ConfigurationAPIService) GetConfigurationById(ctx context.Context, configId int64) (apiserver.ImplResponse, error) {
-	config, err := dbhelper.GetConfig(ctx, configId)
+	tenantId, err := dbhelper.ParseTenantIdFromEnv(ctx)
+	if err != nil {
+		return apiserver.ImplResponse{Code: http.StatusBadRequest}, err
+	}
+
+	config, err := dbhelper.GetTenantConfig(ctx, configId, tenantId)
 	if errors.Is(err, dbhelper.ErrNotFound) {
 		return apiserver.ImplResponse{Code: http.StatusNotFound}, nil
 	}
@@ -73,8 +91,13 @@ func (s *ConfigurationAPIService) GetConfigurationById(ctx context.Context, conf
 }
 
 func (s *ConfigurationAPIService) PutConfigurationById(ctx context.Context, configId int64, config apiserver.Configuration) (apiserver.ImplResponse, error) {
+	tenantId, err := dbhelper.ParseTenantIdFromEnv(ctx)
+	if err != nil {
+		return apiserver.ImplResponse{Code: http.StatusBadRequest}, err
+	}
+
 	config.Id = &configId
-	appConfig := toAppConfig(config)
+	appConfig := toAppConfig(config, tenantId)
 	if err := broker.TestAuthentication(appConfig); err != nil {
 		return apiserver.ImplResponse{Code: http.StatusBadRequest}, fmt.Errorf("testing authentication: %v", err)
 	}
@@ -86,7 +109,12 @@ func (s *ConfigurationAPIService) PutConfigurationById(ctx context.Context, conf
 }
 
 func (s *ConfigurationAPIService) DeleteConfigurationById(ctx context.Context, configId int64) (apiserver.ImplResponse, error) {
-	err := dbhelper.DeleteConfig(ctx, configId)
+	tenantId, err := dbhelper.ParseTenantIdFromEnv(ctx)
+	if err != nil {
+		return apiserver.ImplResponse{Code: http.StatusBadRequest}, err
+	}
+
+	err = dbhelper.DeleteConfig(ctx, configId, tenantId)
 	if errors.Is(err, dbhelper.ErrNotFound) {
 		return apiserver.ImplResponse{Code: http.StatusNotFound}, nil
 	}
@@ -99,13 +127,12 @@ func (s *ConfigurationAPIService) DeleteConfigurationById(ctx context.Context, c
 func toAPIConfig(appConfig appmodel.Configuration) apiserver.Configuration {
 	return apiserver.Configuration{
 		Id:              &appConfig.Id,
-		ApiKey:          appConfig.ApiKey,
+		SiteId:          appConfig.SiteID,
 		Enable:          &appConfig.Enable,
 		RefreshInterval: appConfig.RefreshInterval,
 		RequestTimeout:  &appConfig.RequestTimeout,
 		AssetFilter:     toAPIAssetFilter(appConfig.AssetFilter),
 		Active:          &appConfig.Active,
-		ProjectIDs:      &appConfig.ProjectIDs,
 		UserId:          &appConfig.UserId,
 	}
 }
@@ -124,8 +151,8 @@ func toAPIAssetFilter(appAF [][]appmodel.FilterRule) (result [][]apiserver.Filte
 	return result
 }
 
-func toAppConfig(apiConfig apiserver.Configuration) (appConfig appmodel.Configuration) {
-	appConfig.ApiKey = apiConfig.ApiKey
+func toAppConfig(apiConfig apiserver.Configuration, tenantId uuid.UUID) (appConfig appmodel.Configuration) {
+	appConfig.TenantId = tenantId
 
 	if apiConfig.Id != nil {
 		appConfig.Id = *apiConfig.Id
@@ -143,9 +170,8 @@ func toAppConfig(apiConfig apiserver.Configuration) (appConfig appmodel.Configur
 	if apiConfig.Enable != nil {
 		appConfig.Enable = *apiConfig.Enable
 	}
-	if apiConfig.ProjectIDs != nil {
-		appConfig.ProjectIDs = *apiConfig.ProjectIDs
-	}
+	appConfig.SiteID = apiConfig.SiteId
+
 	return appConfig
 }
 

@@ -17,8 +17,9 @@ package apiservices
 
 import (
 	"context"
-	apiserver "demo/api/generated"
-	"demo/eliona"
+	apiserver "demo/v2/api/generated"
+	dbhelper "demo/v2/db/helper"
+	"demo/v2/eliona"
 	"net/http"
 )
 
@@ -36,7 +37,17 @@ func NewCustomizationAPIService() apiserver.CustomizationAPIServicer {
 // GetDashboardTemplateByName - Get a full dashboard template
 func (s *CustomizationAPIService) GetDashboardTemplateByName(ctx context.Context, dashboardTemplateName string, projectId string) (apiserver.ImplResponse, error) {
 	if dashboardTemplateName == "Demo" {
-		dashboard, err := eliona.GetDashboard(projectId)
+		tenantId, err := dbhelper.ParseTenantIdFromEnv(ctx)
+		if err != nil {
+			return apiserver.ImplResponse{Code: http.StatusBadRequest}, err
+		}
+		appConfigs, err := dbhelper.GetTenantConfigs(ctx, tenantId)
+		if err != nil {
+			return apiserver.ImplResponse{Code: http.StatusInternalServerError}, err
+		}
+
+		// Might need a rework if more than 1 configs per tenant are available...
+		dashboard, err := eliona.GetDashboard(appConfigs[0])
 		if err != nil {
 			return apiserver.ImplResponse{Code: http.StatusInternalServerError}, err
 		}

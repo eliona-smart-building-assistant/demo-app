@@ -17,11 +17,11 @@ package eliona
 
 import (
 	"context"
-	appmodel "demo/app/model"
-	conf "demo/db/helper"
+	appmodel "demo/v2/app/model"
+	conf "demo/v2/db/helper"
 	"fmt"
 
-	"github.com/eliona-smart-building-assistant/go-eliona/utils"
+	"github.com/eliona-smart-building-assistant/go-eliona/v2/utils"
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 )
 
@@ -64,15 +64,19 @@ func (d *ExampleDevice) GetGAI() string {
 	return d.GetAssetType() + "_" + d.ID
 }
 
-func (d *ExampleDevice) GetAssetID(projectID string) (*int32, error) {
-	return conf.GetAssetId(context.Background(), *d.Config, projectID, d.GetGAI())
+func (d *ExampleDevice) GetAssetID() (*int32, error) {
+	return conf.GetAssetId(context.Background(), *d.Config, d.GetGAI())
 }
 
-func (d *ExampleDevice) SetAssetID(assetID int32, projectID string) error {
-	if err := conf.InsertAsset(context.Background(), *d.Config, projectID, d.GetGAI(), assetID, d.ID, false); err != nil {
+func (d *ExampleDevice) SetAssetID(assetID int32) error {
+	if err := conf.InsertAsset(context.Background(), *d.Config, d.GetGAI(), assetID, d.ID, false); err != nil {
 		return fmt.Errorf("inserting asset to config db: %v", err)
 	}
 	return nil
+}
+
+func (d *ExampleDevice) GetSiteID() string {
+	return d.Config.SiteID
 }
 
 func (a *ExampleDevice) GetLocationalParentGAI() string {
@@ -106,15 +110,19 @@ func (r *Root) GetGAI() string {
 	return r.GetAssetType()
 }
 
-func (r *Root) GetAssetID(projectID string) (*int32, error) {
-	return conf.GetAssetId(context.Background(), *r.Config, projectID, r.GetGAI())
+func (r *Root) GetAssetID() (*int32, error) {
+	return conf.GetAssetId(context.Background(), *r.Config, r.GetGAI())
 }
 
-func (r *Root) SetAssetID(assetID int32, projectID string) error {
-	if err := conf.InsertAsset(context.Background(), *r.Config, projectID, r.GetGAI(), assetID, "", true); err != nil {
+func (r *Root) SetAssetID(assetID int32) error {
+	if err := conf.InsertAsset(context.Background(), *r.Config, r.GetGAI(), assetID, "", true); err != nil {
 		return fmt.Errorf("inserting asset to config db: %v", err)
 	}
 	return nil
+}
+
+func (r *Root) GetSiteID() string {
+	return r.Config.SiteID
 }
 
 func (a *Root) GetLocationalParentGAI() string {

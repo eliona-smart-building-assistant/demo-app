@@ -17,7 +17,7 @@ package apiservices
 
 import (
 	"context"
-	apiserver "demo/api/generated"
+	apiserver "demo/v2/api/generated"
 	"encoding/json"
 	"fmt"
 	"io"

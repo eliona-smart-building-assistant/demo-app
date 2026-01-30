@@ -16,23 +16,23 @@
 package eliona
 
 import (
+	appmodel "demo/v2/app/model"
 	"fmt"
 
-	api "github.com/eliona-smart-building-assistant/go-eliona-api-client/v2"
-	"github.com/eliona-smart-building-assistant/go-eliona/client"
+	api "github.com/eliona-smart-building-assistant/go-eliona-api-client/v3"
+	"github.com/eliona-smart-building-assistant/go-eliona/v2/client"
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 )
 
-func GetDashboard(projectId string) (api.Dashboard, error) {
+func GetDashboard(config appmodel.Configuration) (api.Dashboard, error) {
 	dashboard := api.Dashboard{}
 	dashboard.Name = "Demo"
-	dashboard.ProjectId = projectId
 	dashboard.Widgets = []api.Widget{}
 
-	devices, _, err := client.NewClient().AssetsAPI.
-		GetAssets(client.AuthenticationContext()).
+	devices, _, err := client.NewClient(client.ApiEndpointString()).AssetsAPI.
+		GetAssets(client.AuthenticationContext(config.ApiKey)).
 		AssetTypeName("demo_asset").
-		ProjectId(projectId).
+		SiteId(config.SiteID).
 		Execute()
 	if err != nil {
 		return api.Dashboard{}, fmt.Errorf("fetching devices: %v", err)
